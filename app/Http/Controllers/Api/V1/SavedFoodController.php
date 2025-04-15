@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSavedFoodRequest;
-use App\Http\Requests\UpdateSavedFoodRequest;
 use App\Models\SavedFood;
 use Illuminate\Http\Request;
 

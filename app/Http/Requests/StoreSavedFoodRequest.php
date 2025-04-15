@@ -6,23 +6,18 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSavedFoodRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
+    public function authorize()
     {
-        return false;
+        return auth()->check();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
+    public function rules()
     {
         return [
-            //
+            'food_name' => ['required', 'string', 'max:255'],
+            'proteins' => ['required', 'numeric', 'min:0', 'max:999.99'],
+            'fats' => ['required', 'numeric', 'min:0', 'max:999.99'],
+            'carbs' => ['required', 'numeric', 'min:0', 'max:999.99'],
         ];
     }
 }
