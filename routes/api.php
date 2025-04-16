@@ -21,7 +21,7 @@ Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(functio
     Route::get('/saved-foods', [SavedFoodController::class, 'index']);
     Route::post('/saved-foods', [SavedFoodController::class, 'store']);
     Route::get('/saved-foods/search', [SavedFoodController::class, 'search']);
-    Route::delete('/saved-foods/{id}', [SavedFoodController::class, 'destroy']);
+    Route::delete('/saved-foods/{savedFood}', [SavedFoodController::class, 'destroy']);
 
     Route::get('/eaten-foods/show-by-date', [EatenFoodController::class, 'showbydate']);
     Route::post('/eaten-foods', [EatenFoodController::class, 'store']);

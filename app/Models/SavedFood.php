@@ -9,6 +9,8 @@ class SavedFood extends Model
 {
     use HasFactory;
 
+    protected $table = 'saved_foods';
+
     protected $fillable = [
         'user_id',
         'food_name',

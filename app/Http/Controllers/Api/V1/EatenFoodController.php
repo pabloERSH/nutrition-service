@@ -21,7 +21,7 @@ class EatenFoodController extends Controller
         //
     }
 
-    public function storebysearch(Request $request) {
-        //
-    }
+//    public function storebysearch(Request $request) {
+//
+//    }
 }
