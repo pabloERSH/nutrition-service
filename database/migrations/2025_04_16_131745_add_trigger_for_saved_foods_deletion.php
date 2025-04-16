@@ -14,6 +14,7 @@ return new class extends Migration {
                 UPDATE eaten_foods
                 SET
                     food_id = NULL,
+                    food_name = OLD.food_name,
                     proteins = OLD.proteins,
                     fats = OLD.fats,
                     carbs = OLD.carbs

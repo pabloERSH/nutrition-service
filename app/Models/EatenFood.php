@@ -14,6 +14,7 @@ class EatenFood extends Model
     protected $fillable = [
         'user_id',
         'food_id',
+        'food_name',
         'weight',
         'proteins',
         'fats',

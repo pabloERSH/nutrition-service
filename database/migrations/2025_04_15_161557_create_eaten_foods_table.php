@@ -11,20 +11,21 @@ return new class extends Migration {
         Schema::create('eaten_foods', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->timestamp('created_at')->useCurrent();
+            $table->string('food_name')->nullable();
             $table->decimal('weight', 7, 2)->unsigned();
             $table->foreignId('food_id')->nullable()->constrained('saved_foods')->onDelete('set null');
             $table->decimal('proteins', 5, 2)->nullable()->unsigned();
             $table->decimal('fats', 5, 2)->nullable()->unsigned();
             $table->decimal('carbs', 5, 2)->nullable()->unsigned();
+            $table->timestamps();
         });
 
         // Добавляем CHECK ограничение через сырой SQL
         DB::statement('
             ALTER TABLE eaten_foods
             ADD CONSTRAINT check_food_id_or_nutrients CHECK (
-                (food_id IS NOT NULL AND proteins IS NULL AND fats IS NULL AND carbs IS NULL) OR
-                (food_id IS NULL AND proteins IS NOT NULL AND fats IS NOT NULL AND carbs IS NOT NULL)
+                (food_id IS NOT NULL AND proteins IS NULL AND fats IS NULL AND carbs IS NULL AND food_name IS NULL) OR
+                (food_id IS NULL AND proteins IS NOT NULL AND fats IS NOT NULL AND carbs IS NOT NULL AND food_name IS NOT NULL)
             )
         ');
 

@@ -22,9 +22,10 @@ Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(functio
     Route::post('/saved-foods', [SavedFoodController::class, 'store']);
     Route::get('/saved-foods/search', [SavedFoodController::class, 'search']);
     Route::delete('/saved-foods/{savedFood}', [SavedFoodController::class, 'destroy']);
+    Route::patch('/saved-foods/{savedFood}', [SavedFoodController::class, 'update']);
 
-    Route::get('/eaten-foods/show-by-date', [EatenFoodController::class, 'showbydate']);
+    Route::get('/eaten-foods', [EatenFoodController::class, 'index']);
     Route::post('/eaten-foods', [EatenFoodController::class, 'store']);
-    Route::delete('/eaten-foods/{id}', [EatenFoodController::class, 'destroy']);
-    Route::post('/eaten-foods/store-by-search/{id}', [EatenFoodController::class, 'storebysearch']);
+    Route::delete('/eaten-foods/{eatenFood}', [EatenFoodController::class, 'destroy']);
+    Route::patch('/eaten-foods/{eatenFood}', [EatenFoodController::class, 'update']);
 });
