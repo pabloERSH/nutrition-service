@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EatenFood extends Model
 {
@@ -31,12 +32,12 @@ class EatenFood extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function savedFood()
+    public function savedFood(): BelongsTo
     {
         return $this->belongsTo(SavedFood::class, 'food_id');
     }

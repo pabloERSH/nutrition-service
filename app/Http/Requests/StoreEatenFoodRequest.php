@@ -8,12 +8,12 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreEatenFoodRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->check();
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             'weight' => ['numeric', 'min:0', 'max:99999.99'],
@@ -26,7 +26,7 @@ class StoreEatenFoodRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator)
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
             $foodId = $this->input('food_id');
@@ -43,7 +43,7 @@ class StoreEatenFoodRequest extends FormRequest
         });
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'food_name.required' => 'The food name is required.',

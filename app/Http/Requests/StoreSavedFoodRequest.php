@@ -9,12 +9,12 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StoreSavedFoodRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
         return auth()->check();
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             'food_name' => [
@@ -33,7 +33,7 @@ class StoreSavedFoodRequest extends FormRequest
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
             'food_name.required' => 'The food name is required.',
