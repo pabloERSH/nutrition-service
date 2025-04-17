@@ -28,4 +28,5 @@ Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(functio
     Route::post('/eaten-foods', [EatenFoodController::class, 'store']);
     Route::delete('/eaten-foods/{eatenFood}', [EatenFoodController::class, 'destroy']);
     Route::patch('/eaten-foods/{eatenFood}', [EatenFoodController::class, 'update']);
+    Route::get('/eaten-foods/show-by-date', [EatenFoodController::class, 'showByDate']);
 });

@@ -23,6 +23,8 @@ class SavedFood extends Model
         'proteins' => 'decimal:2',
         'fats' => 'decimal:2',
         'carbs' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user()
@@ -34,4 +36,14 @@ class SavedFood extends Model
     {
         return $this->hasMany(EatenFood::class, 'food_id');
     }
+
+//    public function getCreatedAtAttribute($value)
+//    {
+//        return $value ? \Carbon\Carbon::parse($value)->format('d.m.Y H:i:s') : null;
+//    }
+//
+//    public function getUpdatedAtAttribute($value)
+//    {
+//        return $value ? \Carbon\Carbon::parse($value)->format('d.m.Y H:i:s') : null;
+//    }
 }

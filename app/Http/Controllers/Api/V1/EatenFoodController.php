@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEatenFoodRequest;
 use App\Models\EatenFood;
 use App\Models\SavedFood;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 function add_kcal_weight($foods) {
@@ -18,7 +19,7 @@ function add_kcal_weight($foods) {
 
 class EatenFoodController extends Controller
 {
-    public function destroy(EatenFood $eatenFood) {
+    public function destroy(EatenFood $eatenFood): JsonResponse {
         try {
             echo $eatenFood;
             if ($eatenFood->user_id !== auth() -> id()) {
@@ -42,7 +43,7 @@ class EatenFoodController extends Controller
         }
     }
 
-    public function store(StoreEatenFoodRequest $request) {
+    public function store(StoreEatenFoodRequest $request): JsonResponse {
         try{
             $food = EatenFood::create([
                 'user_id' => auth() -> id(),
@@ -67,7 +68,7 @@ class EatenFoodController extends Controller
         }
     }
 
-    public function index(Request $request) {
+    public function index(Request $request): JsonResponse {
         try{
             $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
 
@@ -107,7 +108,7 @@ class EatenFoodController extends Controller
         }
     }
 
-    public function update(StoreEatenFoodRequest $request, eatenFood $eatenFood) {
+    public function update(StoreEatenFoodRequest $request, eatenFood $eatenFood): JsonResponse {
         try {
             if ($eatenFood->user_id !== auth()->id()) {
                 return response()->json([
@@ -144,6 +145,54 @@ class EatenFoodController extends Controller
             return response()->json([
                 'error' => 'Server error',
                 'message' => 'Failed to update food'
+            ], 500);
+        }
+    }
+
+    public function showByDate(Request $request): JsonResponse {
+        try{
+            $date = $request->date;
+            $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
+            if (strtotime($date) === false) {
+                return response()->json([
+                    'error' => 'Date not valid',
+                    'message' => 'Date should be in format YYYY-MM-DD'
+                ], 422);
+            }
+            $foods = EatenFood::whereDate('created_at', $date)->paginate($perPage);
+            $foods = add_kcal_weight($foods);
+
+            $totalKcal = 0;
+            $totalProteins = 0;
+            $totalFats = 0;
+            $totalCarbs = 0;
+
+            foreach ($foods as $food) {
+                $totalKcal += $food->kcal;
+                $totalProteins += $food->proteins;
+                $totalFats += $food->fats;
+                $totalCarbs += $food->carbs;
+            }
+
+            return response()->json([
+                'data' => [
+                    $foods->items(),
+                    'Total proteins' => $totalProteins,
+                    'Total fats' => $totalFats,
+                    'Total carbs' => $totalCarbs,
+                    'Total kcal' => $totalKcal,
+                ],
+                'meta' => [
+                    'current_page' => $foods->currentPage(),
+                    'per_page' => $foods->perPage(),
+                    'total' => $foods->total(),
+                    'last_page' => $foods->lastPage(),
+                ]
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'error' => 'Server error',
+                'message' => 'Failed to retrieve data'
             ], 500);
         }
     }

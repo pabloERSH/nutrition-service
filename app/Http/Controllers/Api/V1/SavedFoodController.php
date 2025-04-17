@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSavedFoodRequest;
 use App\Models\SavedFood;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 function add_kcal($foods) {
@@ -17,7 +19,7 @@ function add_kcal($foods) {
 
 class SavedFoodController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request): JsonResponse {
         try{
             $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
 
@@ -40,7 +42,7 @@ class SavedFoodController extends Controller
         }
     }
 
-    public function store(StoreSavedFoodRequest $request) {
+    public function store(StoreSavedFoodRequest $request): JsonResponse {
         try {
             $food = SavedFood::create([
                 'user_id' => auth() -> id(),
@@ -74,7 +76,7 @@ class SavedFoodController extends Controller
         }
     }
 
-    public function destroy(SavedFood $savedFood) {
+    public function destroy(SavedFood $savedFood): JsonResponse {
         try {
             if ($savedFood->user_id !== auth() -> id()) {
                 return response()->json([
@@ -98,7 +100,7 @@ class SavedFoodController extends Controller
         }
     }
 
-    public function search(Request $request) {
+    public function search(Request $request): JsonResponse {
         try{
             $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
 
@@ -122,7 +124,7 @@ class SavedFoodController extends Controller
         }
     }
 
-    public function update(StoreSavedFoodRequest $request, SavedFood $savedFood) {
+    public function update(StoreSavedFoodRequest $request, SavedFood $savedFood): JsonResponse {
         try {
             if ($savedFood->user_id !== auth()->id()) {
                 return response()->json([
