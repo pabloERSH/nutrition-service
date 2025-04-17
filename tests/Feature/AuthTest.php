@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 beforeEach(function () {
-    // Очищаем таблицу users перед каждым тестом
     User::truncate();
+});
 
+afterAll(function (){
+    User::truncate();
 });
 
 it('can register a new user', function () {

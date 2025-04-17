@@ -21,7 +21,6 @@ class EatenFoodController extends Controller
 {
     public function destroy(EatenFood $eatenFood): JsonResponse {
         try {
-            echo $eatenFood;
             if ($eatenFood->user_id !== auth() -> id()) {
                 return response()->json([
                     'error' => 'Forbidden',
@@ -60,7 +59,6 @@ class EatenFoodController extends Controller
                 'data' => $food
             ], 201);
         }catch(\Exception $e){
-            echo $e->getMessage();
             return response()->json([
                 'error' => 'Server error',
                 'message' => 'Failed to save food'

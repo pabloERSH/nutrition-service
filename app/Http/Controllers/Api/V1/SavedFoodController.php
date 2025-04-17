@@ -92,7 +92,6 @@ class SavedFoodController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            echo $e->getMessage();
             return response()->json([
                 'error' => 'Server error',
                 'message' => 'Failed to delete resource.'
