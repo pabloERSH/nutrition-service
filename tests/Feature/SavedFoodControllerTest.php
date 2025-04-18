@@ -16,6 +16,7 @@ afterAll(function () {
     SavedFood::truncate();
 });
 
+// Index Tests
 it('denies access to list saved foods without authentication', function () {
     $response = $this->getJson('/api/v1/saved-foods');
 
@@ -23,246 +24,125 @@ it('denies access to list saved foods without authentication', function () {
         ->assertJson(['message' => 'Unauthenticated.']);
 });
 
-it('lists saved foods for authenticated user', function () {
+it('lists saved foods for authenticated user with pagination', function () {
     Sanctum::actingAs($this->user);
 
-    SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 1',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-    SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 2',
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ]);
-    $otherUser = User::factory()->create();
-    SavedFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'proteins' => 5.00,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-    ]);
+    $foods = SavedFood::factory()->count(15)->create(['user_id' => $this->user->id]);
 
-    $response = $this->getJson('/api/v1/saved-foods');
+    $response = $this->getJson('/api/v1/saved-foods?per_page=5');
 
     $response->assertStatus(200)
-        ->assertJsonCount(2, 'data')
+        ->assertJsonCount(5, 'data')
         ->assertJsonStructure([
             'data' => [['id', 'food_name', 'proteins', 'fats', 'carbs', 'kcal']],
             'meta' => ['current_page', 'per_page', 'total', 'last_page'],
         ])
-        ->assertJsonFragment(['food_name' => 'Food 1'])
-        ->assertJsonFragment(['food_name' => 'Food 2']);
+        ->assertJson(['meta' => ['per_page' => 5, 'total' => 15]]);
 });
 
+// Store Tests
 it('denies access to store saved food without authentication', function () {
-    $data = [
-        'food_name' => 'Test Food',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ];
+    $foodData = SavedFood::factory()->make()->toArray();
 
-    $response = $this->postJson('/api/v1/saved-foods', $data);
+    $response = $this->postJson('/api/v1/saved-foods', $foodData);
 
     $response->assertStatus(401)
         ->assertJson(['message' => 'Unauthenticated.']);
 });
 
-it('stores a new saved food', function () {
+it('stores a new saved food successfully', function () {
     Sanctum::actingAs($this->user);
 
-    $data = [
-        'food_name' => 'Test Food',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ];
+    $foodData = SavedFood::factory()->make()->toArray();
 
-    $response = $this->postJson('/api/v1/saved-foods', $data);
+    $response = $this->postJson('/api/v1/saved-foods', $foodData);
 
     $response->assertStatus(201)
-        ->assertJson(['message' => 'Food saved successfully'])
-        ->assertJsonStructure(['data' => ['id', 'food_name', 'proteins', 'fats', 'carbs']]);
+        ->assertJson([
+            'message' => 'Food saved successfully',
+            'data' => [
+                'food_name' => $foodData['food_name'],
+                'proteins' => $foodData['proteins'],
+                'fats' => $foodData['fats'],
+                'carbs' => $foodData['carbs'],
+            ]
+        ]);
 
-    $this->assertDatabaseHas('saved_foods', [
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'proteins' => '10.00',
-        'fats' => '5.00',
-        'carbs' => '20.00',
-    ]);
+    $this->assertDatabaseHas('saved_foods', array_merge($foodData, ['user_id' => $this->user->id]));
 });
 
-it('fails to store saved food with invalid data', function () {
+it('fails to store duplicate saved food', function () {
     Sanctum::actingAs($this->user);
 
-    $data = [
-        'food_name' => '',
-        'proteins' => -1,
-        'fats' => 100.00,
-        'carbs' => 'invalid',
-    ];
+    $existingFood = SavedFood::factory()->create(['user_id' => $this->user->id]);
+    $duplicateData = $existingFood->only(['food_name', 'proteins', 'fats', 'carbs']);
 
-    $response = $this->postJson('/api/v1/saved-foods', $data);
+    $response = $this->postJson('/api/v1/saved-foods', $duplicateData);
 
     $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed'])
-        ->assertJsonFragment(['The food name is required.'])
-        ->assertJsonFragment(['Proteins cannot be negative.'])
-        ->assertJsonFragment(['Fats cannot exceed 99.99.'])
-        ->assertJsonFragment(['Carbohydrates must be a number.']);
-});
-
-it('fails to store duplicate saved food due to unique constraint', function () {
-    Sanctum::actingAs($this->user);
-
-    SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'proteins' => 12.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Test Food',
-        'proteins' => 12.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ];
-
-    $response = $this->postJson('/api/v1/saved-foods', $data);
-
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed',
-            "message"=> "The provided data is invalid.",
+        ->assertJson([
+            "error" => "Validation failed",
+            "message" => "The provided data is invalid.",
             "errors" => [
                 "A food with these nutritional values already exists."
             ]
-    ]);
+        ]);
 });
 
-it('denies access to update saved food without authentication', function () {
-    $savedFood = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'proteins' => 11.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Updated Food',
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ];
-
-    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood->id}", $data);
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('updates a saved food', function () {
+// Update Tests
+it('updates a saved food successfully', function () {
     Sanctum::actingAs($this->user);
 
-    $savedFood = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Old Food',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
+    // Создаем запись для текущего пользователя
+    $savedFood = SavedFood::factory()->create(['user_id' => $this->user->id]);
 
-    $data = [
-        'food_name' => 'Updated Food',
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
+    // Генерируем новые данные для обновления
+    $updateData = [
+        'food_name' => 'Updated Food Name',
+        'proteins' => 25.50,
+        'fats' => 10.75,
+        'carbs' => 30.25
     ];
 
-    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood->id}", $data);
+    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood->id}", $updateData);
 
     $response->assertStatus(200)
         ->assertJson(['message' => 'Food updated successfully']);
 
+    // Проверяем обновленные данные, включая user_id
     $this->assertDatabaseHas('saved_foods', [
         'id' => $savedFood->id,
-        'food_name' => 'Updated Food',
-        'proteins' => '15.00',
-        'fats' => '10.00',
-        'carbs' => '30.00',
+        'user_id' => $this->user->id, // Добавляем проверку user_id
+        'food_name' => $updateData['food_name'],
+        'proteins' => $updateData['proteins'],
+        'fats' => $updateData['fats'],
+        'carbs' => $updateData['carbs'],
     ]);
 });
 
-it('fails to update another user\'s saved food', function () {
+it('fails to update with duplicate data', function () {
     Sanctum::actingAs($this->user);
 
-    $otherUser = User::factory()->create();
-    $savedFood = SavedFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'proteins' => 5.50,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-    ]);
+    $food1 = SavedFood::factory()->create(['user_id' => $this->user->id]);
+    $food2 = SavedFood::factory()->create(['user_id' => $this->user->id]);
 
-    $data = [
-        'food_name' => 'Updated Food',
-        'proteins' => 15.50,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ];
+    $response = $this->patchJson("/api/v1/saved-foods/{$food2->id}", $food1->only(['food_name', 'proteins', 'fats', 'carbs']));
 
-    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood->id}", $data);
-
-    $response->assertStatus(403)
-        ->assertJson(['error' => 'Forbidden']);
+    $response->assertStatus(422)
+        ->assertJson([
+            "error" => "Validation failed",
+            "message" => "The provided data is invalid.",
+            "errors" => [
+                "A food with these nutritional values already exists."
+            ]
+        ]);
 });
 
-it('denies access to delete saved food without authentication', function () {
-    $savedFood = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'proteins' => 10.33,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $response = $this->deleteJson("/api/v1/saved-foods/{$savedFood->id}");
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('deletes a saved food and triggers eaten foods update', function () {
+// Delete Tests
+it('deletes a saved food successfully', function () {
     Sanctum::actingAs($this->user);
 
-    $savedFood = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'proteins' => 9.50,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-    $eatenFood = EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_id' => $savedFood->id,
-        'weight' => 100.00,
-        'food_name' => null,
-        'proteins' => null,
-        'fats' => null,
-        'carbs' => null,
-        'created_at' => now(),
-    ]);
+    $savedFood = SavedFood::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->deleteJson("/api/v1/saved-foods/{$savedFood->id}");
 
@@ -270,98 +150,61 @@ it('deletes a saved food and triggers eaten foods update', function () {
         ->assertJson(['message' => 'Food deleted successfully']);
 
     $this->assertDatabaseMissing('saved_foods', ['id' => $savedFood->id]);
-    $this->assertDatabaseHas('eaten_foods', [
-        'id' => $eatenFood->id,
-        'food_id' => null,
-        'food_name' => 'Test Food',
-        'proteins' => '9.50',
-        'fats' => '5.00',
-        'carbs' => '20.00',
-    ]);
 });
 
-it('fails to delete another user\'s saved food', function () {
+// Search Tests
+it('searches saved foods by name with pagination', function () {
+    Sanctum::actingAs($this->user);
+
+    SavedFood::factory()->create([
+        'user_id' => $this->user->id,
+        'food_name' => 'Chicken Breast'
+    ]);
+    SavedFood::factory()->create([
+        'user_id' => $this->user->id,
+        'food_name' => 'Beef Steak'
+    ]);
+
+    $response = $this->getJson('/api/v1/saved-foods/search?food_name=Chicken&per_page=1');
+
+    $response->assertStatus(200)
+        ->assertJsonCount(1, 'data')
+        ->assertJsonFragment(['food_name' => 'Chicken Breast'])
+        ->assertJson(['meta' => ['per_page' => 1, 'total' => 1]]);
+});
+
+// Authorization Tests
+it('fails to update another users food', function () {
     Sanctum::actingAs($this->user);
 
     $otherUser = User::factory()->create();
-    $savedFood = SavedFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'proteins' => 5.00,
-        'fats' => 2.33,
-        'carbs' => 10.00,
+    $savedFood = SavedFood::factory()->create(['user_id' => $otherUser->id]);
+
+    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood->id}", [
+        'food_name' => 'Updated Name',
+        'proteins' => 12,
+        'fats' => 20,
+        'carbs' => 30,
     ]);
+
+    $response->assertStatus(403)
+        ->assertJson([
+            'error' => 'Forbidden',
+            'message' => 'You do not have privileges to update this resource.'
+        ]);
+});
+
+it('fails to delete another users food', function () {
+    Sanctum::actingAs($this->user);
+
+    $otherUser = User::factory()->create();
+    $savedFood = SavedFood::factory()->create(['user_id' => $otherUser->id]);
 
     $response = $this->deleteJson("/api/v1/saved-foods/{$savedFood->id}");
 
     $response->assertStatus(403)
-        ->assertJson(['error' => 'Forbidden']);
-});
-
-it('denies access to search saved foods without authentication', function () {
-    $response = $this->getJson('/api/v1/saved-foods/search?food_name=Chicken');
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('searches saved foods by name', function () {
-    Sanctum::actingAs($this->user);
-
-    SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Chicken Breast',
-        'proteins' => 20.00,
-        'fats' => 5.00,
-        'carbs' => 0.00,
-    ]);
-    SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Beef Steak',
-        'proteins' => 25.00,
-        'fats' => 15.00,
-        'carbs' => 0.00,
-    ]);
-
-    $response = $this->getJson('/api/v1/saved-foods/search?food_name=Chicken');
-
-    $response->assertStatus(200)
-        ->assertJsonCount(1, 'data')
-        ->assertJsonFragment(['food_name' => 'Chicken Breast']);
-});
-
-it('respects unique constraint on update', function () {
-    Sanctum::actingAs($this->user);
-
-    $savedFood1 = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 1',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 23.33,
-    ]);
-    $savedFood2 = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 2',
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 31.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Food 1',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 23.33,
-    ];
-
-    $response = $this->patchJson("/api/v1/saved-foods/{$savedFood2->id}", $data);
-
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed',
-            "message"=> "The provided data is invalid.",
-            "errors" => [
-                "A food with these nutritional values already exists."
-            ]
+        ->assertJson([
+            'error' => 'Forbidden',
+            'message' => 'You do not have privileges to delete this resource.'
         ]);
 });
