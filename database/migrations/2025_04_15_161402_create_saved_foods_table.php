@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        // Включаем расширение pg_trgm
         DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm;');
 
         Schema::create('saved_foods', function (Blueprint $table) {
@@ -23,7 +22,13 @@ return new class extends Migration {
             $table->unique(['food_name', 'proteins', 'fats', 'carbs'], 'unique_food');
         });
 
-        // Создаем триграммный индекс
+        DB::statement('
+            ALTER TABLE eaten_foods
+            ADD CONSTRAINT check_nutrients_sum CHECK (
+                proteins + fats + carbs <= 100
+            );
+        ');
+
         DB::statement('CREATE INDEX idx_saved_foods_food_name_trgm ON saved_foods USING GIN (food_name gin_trgm_ops);');
     }
 

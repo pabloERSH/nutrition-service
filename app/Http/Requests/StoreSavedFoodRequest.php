@@ -33,6 +33,19 @@ class StoreSavedFoodRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $proteins = $this->input('proteins');
+            $fats = $this->input('fats');
+            $carbs = $this->input('carbs');
+
+            if ($proteins + $fats + $carbs > 100) {
+                $validator->errors()->add('nutrients', 'The total amount of nutrients should be less than or equal to 100 grams.');
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [

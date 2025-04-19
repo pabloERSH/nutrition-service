@@ -20,16 +20,21 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        // Добавляем CHECK ограничение через сырой SQL
         DB::statement('
             ALTER TABLE eaten_foods
             ADD CONSTRAINT check_food_id_or_nutrients CHECK (
                 (food_id IS NOT NULL AND proteins IS NULL AND fats IS NULL AND carbs IS NULL AND food_name IS NULL) OR
                 (food_id IS NULL AND proteins IS NOT NULL AND fats IS NOT NULL AND carbs IS NOT NULL AND food_name IS NOT NULL)
-            )
+            );
         ');
 
-        // Создаем индексы
+        DB::statement('
+            ALTER TABLE eaten_foods
+            ADD CONSTRAINT check_nutrients_sum CHECK (
+                proteins + fats + carbs <= 100
+            );
+        ');
+
         Schema::table('eaten_foods', function (Blueprint $table) {
             $table->index('user_id', 'idx_eaten_foods_user_id');
             $table->index('created_at', 'idx_eaten_foods_created_at');

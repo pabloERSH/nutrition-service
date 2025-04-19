@@ -40,6 +40,10 @@ class StoreEatenFoodRequest extends FormRequest
             } elseif (!$foodId && ($proteins === null || $fats === null || $carbs === null || $food_name === null)) {
                 $validator->errors()->add('nutrients', 'Must provide all nutrients (proteins, fats, carbs) if food_id is not provided.');
             }
+
+            if ($proteins + $fats + $carbs > 100) {
+                $validator->errors()->add('nutrients', 'The total amount of nutrients should be less than or equal to 100 grams.');
+            }
         });
     }
 

@@ -126,23 +126,10 @@ class EatenFoodController extends Controller
             return response()->json([
                 'message' => 'Food updated successfully',
             ], 200);
-
-        } catch (QueryException $e) {
-            if ($e->getCode() === '23505') {
-                return response()->json([
-                    'error' => 'Duplicate food',
-                    'message' => 'A food with this name and nutritional values already exists.'
-                ], 422);
-            }
-
-            return response()->json([
-                'error' => 'Server error',
-                'message' => 'Failed to update food'
-            ], 500);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Server error',
-                'message' => 'Failed to update food'
+                'message' => 'Failed to update food',
             ], 500);
         }
     }
