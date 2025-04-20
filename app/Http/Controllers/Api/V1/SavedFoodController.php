@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSavedFoodRequest;
+use App\Http\Requests\UpdateSavedFoodRequest;
 use App\Models\SavedFood;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -111,7 +112,7 @@ class SavedFoodController extends Controller
         }
     }
 
-    public function update(StoreSavedFoodRequest $request, SavedFood $savedFood): JsonResponse {
+    public function update(UpdateSavedFoodRequest $request, SavedFood $savedFood): JsonResponse {
         try {
             if ($savedFood->user_id !== auth()->id()) {
                 return response()->json([
@@ -120,22 +121,20 @@ class SavedFoodController extends Controller
                 ], 403);
             }
 
-            $savedFood->update([
-                'food_name' => $request->food_name,
-                'proteins' => $request->proteins,
-                'fats' => $request->fats,
-                'carbs' => $request->carbs,
-            ]);
+            $savedFood->update($request->validated());
 
             return response()->json([
                 'message' => 'Food updated successfully',
+                'data' => $savedFood->fresh()
             ], 200);
-
         } catch (QueryException $e) {
             if ($e->getCode() === '23505') {
                 return response()->json([
-                    'error' => 'Duplicate food',
-                    'message' => 'A food with this name and nutritional values already exists.'
+                    "error" => "Validation failed",
+                    "message" => "The provided data is invalid.",
+                    "errors" => [
+                        "A food with these nutritional values already exists."
+                    ]
                 ], 422);
             }
 

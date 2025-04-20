@@ -106,33 +106,33 @@ class EatenFoodController extends Controller
         }
     }
 
-    public function update(StoreEatenFoodRequest $request, eatenFood $eatenFood): JsonResponse {
-        try {
-            if ($eatenFood->user_id !== auth()->id()) {
-                return response()->json([
-                    'error' => 'Forbidden',
-                    'message' => 'You do not have privileges to update this resource.'
-                ], 403);
-            }
-
-            $eatenFood->update([
-                'food_name' => $request->food_name,
-                'weight' => $request->weight,
-                'proteins' => $request->proteins,
-                'fats' => $request->fats,
-                'carbs' => $request->carbs,
-            ]);
-
-            return response()->json([
-                'message' => 'Food updated successfully',
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Server error',
-                'message' => 'Failed to update food',
-            ], 500);
-        }
-    }
+//    public function update(StoreEatenFoodRequest $request, eatenFood $eatenFood): JsonResponse {
+//        try {
+//            if ($eatenFood->user_id !== auth()->id()) {
+//                return response()->json([
+//                    'error' => 'Forbidden',
+//                    'message' => 'You do not have privileges to update this resource.'
+//                ], 403);
+//            }
+//
+//            $eatenFood->update([
+//                'food_name' => $request->food_name,
+//                'weight' => $request->weight,
+//                'proteins' => $request->proteins,
+//                'fats' => $request->fats,
+//                'carbs' => $request->carbs,
+//            ]);
+//
+//            return response()->json([
+//                'message' => 'Food updated successfully',
+//            ], 200);
+//        } catch (\Exception $e) {
+//            return response()->json([
+//                'error' => 'Server error',
+//                'message' => 'Failed to update food',
+//            ], 500);
+//        }
+//    }
 
     public function showByDate(Request $request): JsonResponse {
         try{

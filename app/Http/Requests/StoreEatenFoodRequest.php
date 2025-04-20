@@ -16,7 +16,7 @@ class StoreEatenFoodRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'weight' => ['numeric', 'min:0', 'max:99999.99'],
+            'weight' => ['numeric', 'required', 'min:0', 'max:99999.99'],
             'food_id' => ['nullable', 'exists:saved_foods,id'],
             'food_name' => ['string', 'max:255'],
             'proteins' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
