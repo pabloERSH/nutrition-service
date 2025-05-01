@@ -36,6 +36,27 @@ return new class extends Migration {
             );
         ');
 
+        DB::statement('
+            CREATE OR REPLACE FUNCTION check_eaten_at_date()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                IF NEW.eaten_at < (CURRENT_DATE - INTERVAL \'30 days\') THEN
+                    RAISE EXCEPTION \'The eaten_at cannot be earlier than 30 days from today (%)\', CURRENT_DATE;
+                END IF;
+                IF NEW.eaten_at > CURRENT_DATE THEN
+                    RAISE EXCEPTION \'The eaten_at cannot be later than today (%)\', CURRENT_DATE;
+                END IF;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        ');
+
+        DB::statement('
+            CREATE TRIGGER eaten_at_date_check
+            BEFORE INSERT OR UPDATE ON eaten_foods
+            FOR EACH ROW EXECUTE FUNCTION check_eaten_at_date();
+        ');
+
         Schema::table('eaten_foods', function (Blueprint $table) {
             $table->index('user_id', 'idx_eaten_foods_user_id');
             $table->index('created_at', 'idx_eaten_foods_created_at');
@@ -47,5 +68,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('eaten_foods');
+        DB::statement('DROP TRIGGER IF EXISTS eaten_at_date_check ON eaten_foods;');
+        DB::statement('DROP FUNCTION IF EXISTS check_eaten_at_date;');
     }
 };

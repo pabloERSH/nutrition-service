@@ -17,9 +17,11 @@ class StoreEatenFoodRequest extends FormRequest
     public function rules(): array
     {
         $minDate = Carbon::today()->subDays(30)->format('Y-m-d');
+        $maxDate = Carbon::today()->format('Y-m-d');
 
         return [
-            'eaten_at' => ['date', 'required', 'date_format:Y-m-d', 'after_or_equal:' . $minDate],
+            'eaten_at' => ['date', 'required', 'date_format:Y-m-d', 'after_or_equal:' . $minDate,
+                'before_or_equal:' . $maxDate],
             'weight' => ['numeric', 'required', 'min:0', 'max:99999.99'],
             'food_id' => ['nullable', 'exists:saved_foods,id'],
             'food_name' => ['string', 'max:255'],
@@ -75,7 +77,8 @@ class StoreEatenFoodRequest extends FormRequest
             'eaten_at.required' => 'The eaten_at is required.',
             'eaten_at.date' => 'The eaten_at must be a date.',
             'eaten_at.date_format' => 'The eaten_at must be a YYYY-MM-DD format.',
-            'eaten_at.after_or_equal' => 'The eaten_at should not be earlier than 30 days.'
+            'eaten_at.after_or_equal' => 'The eaten_at should not be earlier than 30 days.',
+            'eaten_at.before_or_equal' => 'The eaten_at cannot be later than today.',
         ];
     }
 
