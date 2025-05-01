@@ -47,6 +47,7 @@ class EatenFoodController extends Controller
             $food = EatenFood::create([
                 'user_id' => auth() -> id(),
                 'food_name' => $request->food_name,
+                'eaten_at' => $request->eaten_at,
                 'weight' => $request->weight,
                 'food_id' => $request->food_id,
                 'proteins' => $request->proteins,
@@ -59,6 +60,7 @@ class EatenFoodController extends Controller
                 'data' => $food
             ], 201);
         }catch(\Exception $e){
+            echo $e -> getMessage();
             return response()->json([
                 'error' => 'Server error',
                 'message' => 'Failed to save food'
@@ -106,34 +108,6 @@ class EatenFoodController extends Controller
         }
     }
 
-//    public function update(StoreEatenFoodRequest $request, eatenFood $eatenFood): JsonResponse {
-//        try {
-//            if ($eatenFood->user_id !== auth()->id()) {
-//                return response()->json([
-//                    'error' => 'Forbidden',
-//                    'message' => 'You do not have privileges to update this resource.'
-//                ], 403);
-//            }
-//
-//            $eatenFood->update([
-//                'food_name' => $request->food_name,
-//                'weight' => $request->weight,
-//                'proteins' => $request->proteins,
-//                'fats' => $request->fats,
-//                'carbs' => $request->carbs,
-//            ]);
-//
-//            return response()->json([
-//                'message' => 'Food updated successfully',
-//            ], 200);
-//        } catch (\Exception $e) {
-//            return response()->json([
-//                'error' => 'Server error',
-//                'message' => 'Failed to update food',
-//            ], 500);
-//        }
-//    }
-
     public function showByDate(Request $request): JsonResponse {
         try{
             $date = $request->date;
@@ -144,7 +118,7 @@ class EatenFoodController extends Controller
                     'message' => 'Date should be in format YYYY-MM-DD'
                 ], 422);
             }
-            $foods = EatenFood::whereDate('created_at', $date)->paginate($perPage);
+            $foods = EatenFood::where('eaten_at', $date)->paginate($perPage);
             $foods = add_kcal_weight($foods);
 
             $totalKcal = 0;

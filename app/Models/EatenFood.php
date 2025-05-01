@@ -16,6 +16,7 @@ class EatenFood extends Model
         'user_id',
         'food_id',
         'food_name',
+        'eaten_at',
         'weight',
         'proteins',
         'fats',
@@ -24,6 +25,7 @@ class EatenFood extends Model
     ];
 
     protected $casts = [
+        'eaten_at' => 'date:Y-m-d',
         'weight' => 'decimal:2',
         'proteins' => 'decimal:2',
         'fats' => 'decimal:2',

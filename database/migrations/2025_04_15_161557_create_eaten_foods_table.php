@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('food_name')->nullable();
+            $table->date('eaten_at');
             $table->decimal('weight', 7, 2)->unsigned();
             $table->foreignId('food_id')->nullable()->constrained('saved_foods')->onDelete('set null');
             $table->decimal('proteins', 5, 2)->nullable()->unsigned();
@@ -39,6 +40,7 @@ return new class extends Migration {
             $table->index('user_id', 'idx_eaten_foods_user_id');
             $table->index('created_at', 'idx_eaten_foods_created_at');
             $table->index('food_id', 'idx_eaten_foods_food_id');
+            $table->index('eaten_at', 'idx_eaten_foods_eaten_at');
         });
     }
 

@@ -23,7 +23,7 @@ return new class extends Migration {
         });
 
         DB::statement('
-            ALTER TABLE eaten_foods
+            ALTER TABLE saved_foods
             ADD CONSTRAINT check_nutrients_sum CHECK (
                 proteins + fats + carbs <= 100
             );
