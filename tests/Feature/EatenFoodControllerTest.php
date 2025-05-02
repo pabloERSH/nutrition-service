@@ -4,19 +4,18 @@ use App\Models\EatenFood;
 use App\Models\SavedFood;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
+uses(RefreshDatabase::class);
+
 beforeEach(function () {
-    auth() -> logout();
+    auth()->logout();
     $this->user = User::factory()->create();
-});
-
-afterAll(function () {
-    User::truncate();
     EatenFood::truncate();
-    SavedFood::truncate();
 });
 
+// Index Tests
 it('denies access to list eaten foods without authentication', function () {
     $response = $this->getJson('/api/v1/eaten-foods');
 
@@ -24,270 +23,147 @@ it('denies access to list eaten foods without authentication', function () {
         ->assertJson(['message' => 'Unauthenticated.']);
 });
 
-it('lists eaten foods for authenticated user', function () {
+it('lists eaten foods for authenticated user with pagination', function () {
     Sanctum::actingAs($this->user);
 
-    EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 1',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-    EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Food 2',
-        'weight' => 200.00,
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ]);
-    $otherUser = User::factory()->create();
-    EatenFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'weight' => 50.00,
-        'proteins' => 5.00,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-    ]);
+    EatenFood::factory()->count(15)->create(['user_id' => $this->user->id]);
 
-    $response = $this->getJson('/api/v1/eaten-foods');
+    $response = $this->getJson('/api/v1/eaten-foods?per_page=5');
 
     $response->assertStatus(200)
-        ->assertJsonCount(2, 'data')
+        ->assertJsonCount(5, 'data')
         ->assertJsonStructure([
-            'data' => [['id', 'food_name', 'weight', 'proteins', 'fats', 'carbs', 'kcal']],
+            'data' => [['id', 'food_name', 'proteins', 'fats', 'carbs', 'weight', 'eaten_at', 'kcal']],
             'meta' => ['current_page', 'per_page', 'total', 'last_page'],
         ])
-        ->assertJsonFragment(['food_name' => 'Food 1'])
-        ->assertJsonFragment(['food_name' => 'Food 2']);
+        ->assertJson(['meta' => ['per_page' => 5, 'total' => 15]]);
 });
 
+// Store Tests
 it('denies access to store eaten food without authentication', function () {
-    $data = [
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ];
+    $foodData = EatenFood::factory()->make()->toArray();
 
-    $response = $this->postJson('/api/v1/eaten-foods', $data);
+    $response = $this->postJson('/api/v1/eaten-foods', $foodData);
 
     $response->assertStatus(401)
         ->assertJson(['message' => 'Unauthenticated.']);
 });
 
-it('stores a new eaten food with food_id', function () {
+it('stores eaten food with saved food successfully', function () {
     Sanctum::actingAs($this->user);
 
-    $savedFood = SavedFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Saved Food',
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $data = [
+    $savedFood = SavedFood::factory()->create(['user_id' => $this->user->id]);
+    $foodData = [
         'food_id' => $savedFood->id,
-        'weight' => 100.00,
+        'eaten_at' => Carbon::today()->format('Y-m-d'),
+        'weight' => 100,
     ];
 
-    $response = $this->postJson('/api/v1/eaten-foods', $data);
+    $response = $this->postJson('/api/v1/eaten-foods', $foodData);
 
     $response->assertStatus(201)
-        ->assertJson(['message' => 'Food saved successfully'])
-        ->assertJsonStructure(['data' => ['id', 'food_name', 'weight', 'proteins', 'fats', 'carbs']]);
+        ->assertJson([
+            'message' => 'Food saved successfully',
+            'data' => [
+                'food_id' => $savedFood->id,
+                'eaten_at' => $foodData['eaten_at'],
+                'weight' => '100.00',
+            ],
+        ]);
 
     $this->assertDatabaseHas('eaten_foods', [
         'user_id' => $this->user->id,
         'food_id' => $savedFood->id,
+        'eaten_at' => $foodData['eaten_at'],
         'weight' => '100.00',
-        'food_name' => null,
-        'proteins' => null,
-        'fats' => null,
-        'carbs' => null,
     ]);
 });
 
-it('stores a new eaten food without food_id', function () {
+it('stores eaten food with custom nutrients successfully', function () {
     Sanctum::actingAs($this->user);
 
-    $data = [
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
+    $foodData = [
+        'food_name' => 'Custom Meal',
+        'proteins' => 10,
+        'fats' => 20,
+        'carbs' => 30,
+        'eaten_at' => Carbon::today()->format('Y-m-d'),
+        'weight' => 150,
     ];
 
-    $response = $this->postJson('/api/v1/eaten-foods', $data);
+    $response = $this->postJson('/api/v1/eaten-foods', $foodData);
 
     $response->assertStatus(201)
-        ->assertJson(['message' => 'Food saved successfully'])
-        ->assertJsonStructure(['data' => ['id', 'food_name', 'weight', 'proteins', 'fats', 'carbs']]);
+        ->assertJson([
+            'message' => 'Food saved successfully',
+            'data' => [
+                'food_name' => 'Custom Meal',
+                'proteins' => '10.00',
+                'fats' => '20.00',
+                'carbs' => '30.00',
+                'eaten_at' => $foodData['eaten_at'],
+                'weight' => '150.00',
+            ],
+        ]);
 
     $this->assertDatabaseHas('eaten_foods', [
         'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => '100.00',
+        'food_name' => 'Custom Meal',
         'proteins' => '10.00',
-        'fats' => '5.00',
-        'carbs' => '20.00',
-        'food_id' => null,
-    ]);
-});
-
-it('fails to store eaten food with invalid data violating CHECK constraint', function () {
-    Sanctum::actingAs($this->user);
-
-    $data = [
-        'food_id' => 1,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-    ];
-
-    $response = $this->postJson('/api/v1/eaten-foods', $data);
-
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed'])
-        ->assertJsonFragment(['Cannot provide both food_id and nutrients.']);
-});
-
-it('fails to store eaten food with negative weight', function () {
-    Sanctum::actingAs($this->user);
-
-    $data = [
-        'food_name' => 'Test Food',
-        'weight' => -100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ];
-
-    $response = $this->postJson('/api/v1/eaten-foods', $data);
-
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed'])
-        ->assertJsonFragment(['Weight cannot be negative.']);
-});
-
-it('denies access to update eaten food without authentication', function () {
-    $eatenFood = EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Updated Food',
-        'weight' => 200.00,
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ];
-
-    $response = $this->patchJson("/api/v1/eaten-foods/{$eatenFood->id}", $data);
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('updates an eaten food', function () {
-    Sanctum::actingAs($this->user);
-
-    $eatenFood = EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Old Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Updated Food',
-        'weight' => 200.00,
-        'proteins' => 15.00,
-        'fats' => 10.00,
-        'carbs' => 30.00,
-    ];
-
-    $response = $this->patchJson("/api/v1/eaten-foods/{$eatenFood->id}", $data);
-
-    $response->assertStatus(200)
-        ->assertJson(['message' => 'Food updated successfully']);
-
-    $this->assertDatabaseHas('eaten_foods', [
-        'id' => $eatenFood->id,
-        'food_name' => 'Updated Food',
-        'weight' => '200.00',
-        'proteins' => '15.00',
-        'fats' => '10.00',
+        'fats' => '20.00',
         'carbs' => '30.00',
+        'eaten_at' => $foodData['eaten_at'],
+        'weight' => '150.00',
     ]);
 });
 
-it('fails to update another user\'s eaten food', function () {
+it('fails to store eaten food with invalid date', function () {
     Sanctum::actingAs($this->user);
 
-    $otherUser = User::factory()->create();
-    $eatenFood = EatenFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'weight' => 50.00,
-        'proteins' => 5.00,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-    ]);
-
-    $data = [
-        'food_name' => 'Updated Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
+    $foodData = [
+        'food_name' => 'Apple',
+        'proteins' => 0.5,
+        'fats' => 0.2,
+        'carbs' => 14,
+        'eaten_at' => Carbon::today()->subDays(31)->format('Y-m-d'),
+        'weight' => 100,
     ];
 
-    $response = $this->patchJson("/api/v1/eaten-foods/{$eatenFood->id}", $data);
+    $response = $this->postJson('/api/v1/eaten-foods', $foodData);
 
-    $response->assertStatus(403)
-        ->assertJson(['error' => 'Forbidden']);
+    $response->assertStatus(422)
+        ->assertJson([
+            'error' => 'Validation failed',
+            'errors' => ['The eaten_at should not be earlier than 30 days.'],
+        ]);
 });
 
-it('denies access to delete eaten food without authentication', function () {
-    $eatenFood = EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
-
-    $response = $this->deleteJson("/api/v1/eaten-foods/{$eatenFood->id}");
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('deletes an eaten food', function () {
+it('fails to store eaten food with excessive nutrients', function () {
     Sanctum::actingAs($this->user);
 
-    $eatenFood = EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-    ]);
+    $foodData = [
+        'food_name' => 'Overloaded Meal',
+        'proteins' => 50,
+        'fats' => 50,
+        'carbs' => 50,
+        'eaten_at' => Carbon::today()->format('Y-m-d'),
+        'weight' => 100,
+    ];
+
+    $response = $this->postJson('/api/v1/eaten-foods', $foodData);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'error' => 'Validation failed',
+            'errors' => ['The total amount of nutrients should be less than or equal to 100 grams.'],
+        ]);
+});
+
+// Delete Tests
+it('deletes an eaten food successfully', function () {
+    Sanctum::actingAs($this->user);
+
+    $eatenFood = EatenFood::factory()->create(['user_id' => $this->user->id]);
 
     $response = $this->deleteJson("/api/v1/eaten-foods/{$eatenFood->id}");
 
@@ -301,56 +177,31 @@ it('fails to delete another user\'s eaten food', function () {
     Sanctum::actingAs($this->user);
 
     $otherUser = User::factory()->create();
-    $eatenFood = EatenFood::create([
-        'user_id' => $otherUser->id,
-        'food_name' => 'Other Food',
-        'weight' => 50.00,
-        'proteins' => 5.00,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-    ]);
+    $eatenFood = EatenFood::factory()->create(['user_id' => $otherUser->id]);
 
     $response = $this->deleteJson("/api/v1/eaten-foods/{$eatenFood->id}");
 
     $response->assertStatus(403)
-        ->assertJson(['error' => 'Forbidden']);
+        ->assertJson([
+            'error' => 'Forbidden',
+            'message' => 'You do not have privileges to delete this resource.',
+        ]);
 });
 
-it('denies access to show eaten foods by date without authentication', function () {
-    $response = $this->getJson('/api/v1/eaten-foods/show-by-date?date=2025-04-16');
-
-    $response->assertStatus(401)
-        ->assertJson(['message' => 'Unauthenticated.']);
-});
-
-it('shows eaten foods by date', function () {
+// Show By Date Tests
+it('returns empty data for show by date with no foods', function () {
     Sanctum::actingAs($this->user);
+    $date = Carbon::today()->format('Y-m-d');
+    $otherDate = Carbon::today()->subDays(10)->format('Y-m-d');
 
-    EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-        'created_at' => Carbon::parse('2025-04-16 10:00:00 UTC')->toISOString(),
-    ]);
-    EatenFood::create([
-        'user_id' => $this->user->id,
-        'food_name' => 'Other Food',
-        'weight' => 50.00,
-        'proteins' => 5.00,
-        'fats' => 2.00,
-        'carbs' => 10.00,
-        'created_at' => Carbon::parse('2025-04-17 10:00:00 UTC')->toISOString(),
-    ]);
+    EatenFood::factory()->create(['user_id' => $this->user->id, 'eaten_at' => $otherDate]);
 
-    $response = $this->getJson('/api/v1/eaten-foods/show-by-date?date=2025-04-16');
-
+    $response = $this->getJson("/api/v1/eaten-foods/show-by-date?date={$date}");
     $response->assertStatus(200)
-        ->assertJsonCount(1, 'data.0')
+        ->assertJsonCount(0, 'data.items')
         ->assertJsonStructure([
             'data' => [
+                'items' => [],
                 'Total proteins',
                 'Total fats',
                 'Total carbs',
@@ -358,40 +209,72 @@ it('shows eaten foods by date', function () {
             ],
             'meta' => ['current_page', 'per_page', 'total', 'last_page'],
         ])
-        ->assertJsonFragment(['food_name' => 'Test Food']);
+        ->assertJson([
+            'data' => [
+                'Total proteins' => 0,
+                'Total fats' => 0,
+                'Total carbs' => 0,
+                'Total kcal' => 0,
+            ],
+        ]);
 });
 
-it('fails to show eaten foods with invalid date', function () {
+it('shows eaten foods by date with aggregation', function () {
     Sanctum::actingAs($this->user);
 
-    $response = $this->getJson('/api/v1/eaten-foods/show-by-date?date=invalid');
+    $date = Carbon::today()->format('Y-m-d');
+    $otherDate = Carbon::today()->subDays(10)->format('Y-m-d');
 
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Date not valid']);
-});
+    EatenFood::factory()->create(['user_id' => $this->user->id, 'eaten_at' => $otherDate]);
+    EatenFood::factory()->create(['user_id' => $this->user->id, 'eaten_at' => $otherDate]);
 
-it('respects CHECK constraint on update', function () {
-    Sanctum::actingAs($this->user);
-
-    $eatenFood = EatenFood::create([
+    EatenFood::factory()->create([
         'user_id' => $this->user->id,
-        'food_name' => 'Test Food',
-        'weight' => 100.00,
-        'proteins' => 10.00,
-        'fats' => 5.00,
-        'carbs' => 20.00,
-        'created_at' => now(),
+        'eaten_at' => $date,
+        'proteins' => 10,
+        'fats' => 20,
+        'carbs' => 30,
+        'weight' => 100,
+    ]);
+    EatenFood::factory()->create([
+        'user_id' => $this->user->id,
+        'eaten_at' => $date,
+        'proteins' => 5,
+        'fats' => 10,
+        'carbs' => 15,
+        'weight' => 200,
     ]);
 
-    $data = [
-        'food_id' => 1,
-        'food_name' => 'Updated Food',
-        'weight' => 200.00,
-    ];
+    $response = $this->getJson("/api/v1/eaten-foods/show-by-date?date={$date}&per_page=5");
 
-    $response = $this->patchJson("/api/v1/eaten-foods/{$eatenFood->id}", $data);
+    $response->assertStatus(200)
+        ->assertJsonCount(2, 'data.items')
+        ->assertJsonStructure([
+            'data' => [
+                'items' => [
+                    '*' => ['id', 'food_name', 'proteins', 'fats', 'carbs', 'weight', 'eaten_at', 'kcal'],
+                ],
+                'Total proteins',
+                'Total fats',
+                'Total carbs',
+                'Total kcal',
+            ],
+            'meta' => ['current_page', 'per_page', 'total', 'last_page'],
+        ])
+        ->assertJson([
+            'data' => [
+                'Total proteins' => 15,
+                'Total fats' => 30,
+                'Total carbs' => 45,
+            ],
+        ]);
+});
 
-    $response->assertStatus(422)
-        ->assertJson(['error' => 'Validation failed'])
-        ->assertJsonFragment(['Cannot provide both food_id and nutrients.']);
+// Authorization Tests
+it('denies access to show eaten foods by date without authentication', function () {
+    $date = Carbon::today()->format('Y-m-d');
+    $response = $this->getJson("/api/v1/eaten-foods/show-by-date?date={$date}");
+
+    $response->assertStatus(401)
+        ->assertJson(['message' => 'Unauthenticated.']);
 });

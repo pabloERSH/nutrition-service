@@ -2,18 +2,11 @@
 
 use App\Models\SavedFood;
 use App\Models\User;
-use App\Models\EatenFood;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
     auth()->logout();
     $this->user = User::factory()->create();
-});
-
-afterAll(function () {
-    User::truncate();
-    EatenFood::truncate();
-    SavedFood::truncate();
 });
 
 // Index Tests

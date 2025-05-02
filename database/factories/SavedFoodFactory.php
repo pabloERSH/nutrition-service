@@ -14,10 +14,10 @@ class SavedFoodFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'food_name' => $this->faker->unique()->word, // Исправлено: используем word вместо words
-            'proteins' => $this->faker->randomFloat(2, 0, 100),
-            'fats' => $this->faker->randomFloat(2, 0, 100),
-            'carbs' => $this->faker->randomFloat(2, 0, 100),
+            'food_name' => $this->faker->unique()->lexify('???????'),
+            'proteins' => $this->faker->randomFloat(2, 0, 33.33),
+            'fats' => $this->faker->randomFloat(2, 0, 33.33),
+            'carbs' => $this->faker->randomFloat(2, 0, 33.33),
         ];
     }
 }
