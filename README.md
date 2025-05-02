@@ -1,66 +1,408 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Nutrition service
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Описание
 
-## About Laravel
+**Сервис питания** — это микросервис для отслеживания и анализа рациона питания. Пользователи могут вести учет приемов пищи, сохранять информацию о продуктах в общей базе знаний и отслеживать данные о макронутриентах (белки, жиры, углеводы) и калориях. Сервис интегрируется с другими микросервисами для создания комплексного решения по отслеживанию здоровья.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Основные функции:**
+- **Аутентификация пользователей**: Безопасная регистрация, вход и выход с использованием Laravel Sanctum.
+- **Учет питания**: Ведение записей о приемах пищи с указанием названия продукта, веса, макронутриентов и даты потребления.
+- **База продуктов**: Сохранение и поиск информации о продуктах в общей базе.
+- **Анализ питания**: Расчет калорий и агрегация данных о макронутриентах по дням.
+- **API-ориентированность**: RESTful API для интеграции с другими микросервисами или фронтенд-приложениями.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Роль в системе:**
+- Управление аутентификацией пользователей и токенами сессий.
+- Хранение, получение и анализ данных о питании.
+- Взаимодействие с другими микросервисами через API для обмена данными.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Технологии и зависимости
 
-## Learning Laravel
+### Технологический стек
+- **PHP**: 8.4.6
+- **Laravel**: 12.1.1
+- **Laravel Sanctum**: Для аутентификации и управления токенами API.
+- **Pest PHP**: Для юнит- и функционального тестирования.
+- **PostgreSQL**: Для хранения данных.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Ключевые зависимости
+- `laravel/sanctum`: Аутентификация и управление токенами API.
+- `pestphp/pest`: Фреймворк для тестирования.
+- Полный список зависимостей указан в `composer.json`.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Начало работы
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Требования
+- PHP >= 8.4.6
+- Composer
+- PostgreSQL
 
-## Laravel Sponsors
+### Установка
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. **Клонирование репозитория**:
+   ```bash
+   git clone https://github.com/pabloERSH/nutrition-service.git
+   cd nutrition-service
+   ```
 
-### Premium Partners
+2. **Установка зависимостей**:
+   ```bash
+   composer install
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+3. **Настройка окружения**:
+   - Скопируйте файл примера окружения:
+     ```bash
+     cp .env.example .env
+     ```
+   - Обновите `.env` с настройками базы данных и других параметров:
+     ```
+     DB_CONNECTION=pgsql
+     DB_HOST=127.0.0.1
+     DB_PORT=5432
+     DB_DATABASE=your_db_name
+     DB_USERNAME=your_username
+     DB_PASSWORD=your_password
+     ```
 
-## Contributing
+4. **Генерация ключа приложения**:
+   ```bash
+   php artisan key:generate
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. **Запуск миграций базы данных**:
+   ```bash
+   php artisan migrate
+   ```
 
-## Code of Conduct
+6. **Запуск локального сервера**:
+   ```bash
+   php artisan serve
+   ```
+   Сервис будет доступен по адресу: [http://localhost:8000](http://localhost:8000).
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Документация API
 
-## Security Vulnerabilities
+Сервис питания предоставляет RESTful API под префиксом `/api/v1`. Все эндпоинты, кроме регистрации и входа, требуют аутентификации через токен Sanctum, передаваемый в заголовке `Authorization` как `Bearer <token>`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Эндпоинты аутентификации
 
-## License
+- **POST /api/v1/register**
+  - **Описание**: Регистрирует нового пользователя.
+  - **Параметры**:
+    - `name` (строка, обязательный)
+    - `email` (строка, обязательный, уникальный)
+    - `password` (строка, обязательный, минимум 8 символов)
+  - **Пример запроса**:
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/register \
+         -H "Content-Type: application/json" \
+         -d '{"name":"Иван Иванов","email":"ivan@example.com","password":"password123"}'
+    ```
+  - **Ответ (201 Created)**:
+    ```json
+    {
+      "id": 1,
+      "name": "Иван Иванов",
+      "email": "ivan@example.com",
+      "token": "<sanctum_token>"
+    }
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **POST /api/v1/login**
+  - **Описание**: Аутентифицирует пользователя и возвращает токен Sanctum.
+  - **Параметры**:
+    - `email` (строка, обязательный)
+    - `password` (строка, обязательный)
+  - **Заголовки**:
+    - `Accept: application/json`
+  - **Пример запроса**:
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/login \
+         -H "Content-Type: application/json" \
+         -H "Accept: application/json" \
+         -d '{"email":"ivan@example.com","password":"password123"}'
+    ```
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "id": 1,
+      "name": "Иван Иванов",
+      "email": "ivan@example.com",
+      "token": "<sanctum_token>"
+    }
+    ```
+
+- **POST /api/v1/logout**
+  - **Описание**: Инвалидирует текущий токен пользователя.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "message": "Logged out, token removed"
+    }
+    ```
+
+- **GET /api/user**
+  - **Описание**: Возвращает информацию об аутентифицированном пользователе.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "id": 1,
+      "name": "Иван Иванов",
+      "email": "ivan@example.com"
+    }
+    ```
+
+### Эндпоинты питания
+
+- **GET /api/v1/eaten-foods**
+  - **Описание**: Возвращает постраничный список приемов пищи пользователя, подсчитывает калории.
+  - **Параметры запроса**:
+    - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
+    - `page` (целое число, необязательный, по умолчанию: 1)
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "food_name": "Яблоко",
+          "proteins": "0.50",
+          "fats": "0.20",
+          "carbs": "14.00",
+          "weight": "100.00",
+          "eaten_at": "2025-05-02",
+          ...
+          "kcal": 52.20
+        }
+      ],
+      "meta": {
+        "current_page": 1,
+        "per_page": 10,
+        "total": 1,
+        "last_page": 1
+      }
+    }
+    ```
+
+- **POST /api/v1/eaten-foods**
+  - **Описание**: Регистрирует новый прием пищи. Можно отправить свою инофрмацию о продукте, не отправляя food_id (id сохраненного продукта), а можно взять сохранненую информацию, передав food_id и не передавая food_name, proteins, fats, carbs.
+  - **Параметры**:
+    - `food_name` (строка, необязательный)
+    - `food_id` (целое число, необязательный, ссылка на сохраненный продукт)
+    - `proteins` (число, необязательный, обязателен при наличии `food_name`)
+    - `fats` (число, необязательный, обязателен при наличии `food_name`)
+    - `carbs` (число, необязательный, обязателен при наличии `food_name`)
+    - `weight` (число, обязательный)
+    - `eaten_at` (строка, обязательный, формат: YYYY-MM-DD)
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Пример запроса**:
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/eaten-foods \
+         -H "Authorization: Bearer <token>" \
+         -H "Content-Type: application/json" \
+         -d '{"food_name":"Собственный рецепт","proteins":10,"fats":20,"carbs":30,"weight":150,"eaten_at":"2025-05-02"}'
+    ```
+  - **Ответ (201 Created)**:
+    ```json
+    {
+      "message": "Food saved successfully",
+      "data": {
+        "food_name": "Собственный рецепт",
+        "proteins": "10.00",
+        "fats": "20.00",
+        "carbs": "30.00",
+        "weight": "150.00",
+        "eaten_at": "2025-05-02"
+        ...
+      }
+    }
+    ```
+
+- **DELETE /api/v1/eaten-foods/{id}**
+  - **Описание**: Удаляет запись о приеме пищи.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "message": "Food deleted successfully"
+    }
+    ```
+
+- **GET /api/v1/eaten-foods/show-by-date**
+  - **Описание**: Возвращает приемы пищи за указанную дату с агрегированными данными о питании. Подсчитывает суммарную информацию о макронутриентах и калориях.
+  - **Параметры запроса**:
+    - `date` (строка, обязательный, формат: YYYY-MM-DD)
+    - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
+    - `page` (целое число, необязательный, по умолчанию: 1)
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "data": {
+        "items": [
+          {
+            "id": 1,
+            "food_name": "Яблоко",
+            "proteins": "0.50",
+            "fats": "0.20",
+            "carbs": "14.00",
+            "weight": "100.00",
+            "eaten_at": "2025-05-02",
+            ...
+            "kcal": 52.20
+          }
+        ],
+        "Total proteins": 0.5,
+        "Total fats": 0.2,
+        "Total carbs": 14,
+        "Total kcal": 52.2
+      },
+      "meta": {
+        "current_page": 1,
+        "per_page": 10,
+        "total": 1,
+        "last_page": 1
+      }
+    }
+    ```
+
+- **GET /api/v1/saved-foods**
+  - **Описание**: Возвращает постраничный список сохраненных продуктов, подсчитывает калорийность на 100 грамм.
+  - **Параметры запроса**:
+    - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
+    - `page` (целое число, необязательный, по умолчанию: 1)
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "data": [
+        {
+          "id": 1,
+          "food_name": "Яблоко",
+          "proteins": "0.50",
+          "fats": "0.20",
+          "carbs": "14.00",
+          ...
+          "kcal": 59.8
+        }
+      ],
+      "meta": {
+        "current_page": 1,
+        "per_page": 10,
+        "total": 1,
+        "last_page": 1
+      }
+    }
+    ```
+
+- **POST /api/v1/saved-foods**
+  - **Описание**: Сохраняет новый продукт в базе данных.
+  - **Параметры**:
+    - `food_name` (строка, обязательный)
+    - `proteins` (число, обязательный)
+    - `fats` (число, обязательный)
+    - `carbs` (число, обязательный)
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (201 Created)**:
+    ```json
+    {
+      "message": "Food saved successfully",
+      "data": {
+        "food_name": "Яблоко",
+        "proteins": "0.50",
+        "fats": "0.20",
+        "carbs": "14.00"
+        ...
+      }
+    }
+    ```
+
+- **PATCH /api/v1/saved-foods/{id}**
+  - **Описание**: Обновляет сохраненный продукт.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "message": "Food updated successfully",
+        "data": {
+            "id": 4,
+            "user_id": 2,
+            "food_name": "Крупа гречневая",
+            "proteins": "13.00",
+            "fats": "2.50",
+            "carbs": "34.00",
+            ...
+        }
+    }
+    ```
+
+- **DELETE /api/v1/saved-foods/{id}**
+  - **Описание**: Удаляет сохраненный продукт.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+  - **Ответ (200 OK)**:
+    ```json
+    {
+      "message": "Food deleted successfully"
+    }
+    ```
+
+## Тестирование
+
+### Настройка
+1. Создайте файл окружения для тестирования:
+   ```bash
+   cp .env.example .env.testing
+   ```
+2. Настройте `.env.testing`, указав подключение к тестовой базе данных PostgreSQL:
+   ```
+   DB_CONNECTION=pgsql
+   DB_HOST=127.0.0.1
+   DB_PORT=5432
+   DB_DATABASE=your_test_db_name
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+   ```
+
+3. Выполните миграции для тестового окружения:
+   ```bash
+   php artisan migrate --env=testing
+   ```
+
+### Запуск тестов
+Запустите все тесты с помощью Pest:
+```bash
+php artisan test
+```
+Или с анализом покрытия:
+```bash
+php artisan test --coverage
+```
+
+Тестовый набор включает:
+- Юнит-тесты для вспомогательных функций (например, `KcalCountHelper`).
+- Функциональные тесты для аутентификации (`AuthTest`).
+- Функциональные тесты для учета питания (`EatenFoodControllerTest`).
+- Функциональные тесты для сохраненных продуктов (`SavedFoodControllerTest`).
+
+## Контакты
+
+- **Разработчик**: Ершов Павел
+- **Telegram**: @pave1ershov
+- **Email**: pave1ershov@yandex.ru
+- **Проблемы**: Сообщайте о багах или запрашивайте новые функции через [GitHub Issues](https://github.com/pabloERSH/nutrition-service/issues).
+
+---
