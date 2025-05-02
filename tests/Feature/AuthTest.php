@@ -1,16 +1,10 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 
-beforeEach(function () {
-    User::truncate();
-});
-
-afterAll(function (){
-    User::truncate();
-});
+uses(RefreshDatabase::class);
 
 it('can register a new user', function () {
     $response = $this->postJson('/api/v1/register', [

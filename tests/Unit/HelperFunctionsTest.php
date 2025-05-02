@@ -6,7 +6,7 @@ use App\Models\SavedFood;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Tests\TestCase::class, RefreshDatabase::class);
+uses(\tests\TestCase::class, RefreshDatabase::class);
 
 it('calculates kcal correctly for saved food', function () {
     $user = User::factory()->create();

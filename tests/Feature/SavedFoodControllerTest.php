@@ -2,7 +2,10 @@
 
 use App\Models\SavedFood;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     auth()->logout();
