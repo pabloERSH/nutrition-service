@@ -9,14 +9,7 @@ use App\Models\SavedFood;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-function add_kcal($foods) {
-    $foods->getCollection()->transform(function ($food) {
-        $food->kcal = round(($food->proteins * 4) + ($food->fats * 9) + ($food->carbs * 4), 2);
-        return $food;
-    });
-    return $foods;
-}
+use App\Helpers\KcalCountHelper;
 
 class SavedFoodController extends Controller
 {
@@ -25,7 +18,7 @@ class SavedFoodController extends Controller
             $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
 
             $foods = SavedFood::where('user_id', auth() -> id())->paginate($perPage);
-            $foods = add_kcal($foods);
+            $foods = KcalCountHelper::addKcal($foods);
             return response()->json([
                 'data' => $foods->items(),
                 'meta' => [
@@ -93,7 +86,7 @@ class SavedFoodController extends Controller
             $perPage = min(max((int) $request->input('per_page', 10), 1), 20);
 
             $foods = SavedFood::where('food_name', 'LIKE', "%{$request->food_name}%")->paginate($perPage);
-            $foods = add_kcal($foods);
+            $foods = KcalCountHelper::addKcal($foods);
 
             return response()->json([
                 'data' => $foods->items(),

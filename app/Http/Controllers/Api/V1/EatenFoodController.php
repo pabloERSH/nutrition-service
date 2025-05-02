@@ -8,14 +8,7 @@ use App\Models\EatenFood;
 use App\Models\SavedFood;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-function add_kcal_weight($foods) {
-    $foods->getCollection()->transform(function ($food) {
-        $food->kcal = round(((float)($food->weight)/100) * (($food->proteins * 4) + ($food->fats * 9) + ($food->carbs * 4)), 2);
-        return $food;
-    });
-    return $foods;
-}
+use App\Helpers\KcalCountHelper;
 
 class EatenFoodController extends Controller
 {
@@ -89,7 +82,7 @@ class EatenFoodController extends Controller
                 return $eatenFood;
             });
 
-            $foods = add_kcal_weight($foods);
+            $foods = KcalCountHelper::addKcalWeight($foods);
 
             return response()->json([
                 'data' => $foods->items(),
@@ -118,8 +111,27 @@ class EatenFoodController extends Controller
                     'message' => 'Date should be in format YYYY-MM-DD'
                 ], 422);
             }
-            $foods = EatenFood::where('eaten_at', $date)->paginate($perPage);
-            $foods = add_kcal_weight($foods);
+
+            $foods = EatenFood::where('user_id', auth()->id())
+                ->whereDate('eaten_at', $date)
+                ->paginate($perPage);
+
+            $foods->getCollection()->transform(function ($eatenFood) {
+                if (!is_null($eatenFood->food_id)) {
+                    $savedFood = SavedFood::find($eatenFood->food_id);
+
+                    if ($savedFood) {
+                        $eatenFood->food_name = $savedFood->food_name;
+                        $eatenFood->proteins = $savedFood->proteins;
+                        $eatenFood->fats = $savedFood->fats;
+                        $eatenFood->carbs = $savedFood->carbs;
+                    }
+                }
+                unset($eatenFood->food_id);
+                return $eatenFood;
+            });
+
+            $foods = KcalCountHelper::addKcalWeight($foods);
 
             $totalKcal = 0;
             $totalProteins = 0;
@@ -133,14 +145,18 @@ class EatenFoodController extends Controller
                 $totalCarbs += $food->carbs;
             }
 
+            $items = array_values($foods->items());
+
             return response()->json([
-                'data' => [
-                    $foods->items(),
-                    'Total proteins' => $totalProteins,
-                    'Total fats' => $totalFats,
-                    'Total carbs' => $totalCarbs,
-                    'Total kcal' => $totalKcal,
-                ],
+                'data' => array_merge(
+                    ['items' => $items], // Явно называем ключ 'items'
+                    [
+                        'Total proteins' => $totalProteins,
+                        'Total fats' => $totalFats,
+                        'Total carbs' => $totalCarbs,
+                        'Total kcal' => $totalKcal,
+                    ]
+                ),
                 'meta' => [
                     'current_page' => $foods->currentPage(),
                     'per_page' => $foods->perPage(),
