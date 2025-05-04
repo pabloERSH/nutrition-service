@@ -1,0 +1,1 @@
+* * * * * cd /nutrition-service && php artisan schedule:run &> /dev/null
