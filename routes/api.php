@@ -12,7 +12,7 @@ Route::prefix('v1')->middleware(['throttle:api'])->group(function () {
 });
 
 Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
-    Route::get('/users', function (Request $request) {
+    Route::get('/user', function (Request $request) {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -28,3 +28,11 @@ Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(functio
     Route::delete('/eaten-foods/{eatenFood}', [EatenFoodController::class, 'destroy']);
     Route::get('/eaten-foods/show-by-date', [EatenFoodController::class, 'showByDate']);
 });
+
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Welcome to the API',
+        'info' => 'This API allows users to search for products by name and view their nutritional
+         value and keep a food diary by recording meals and tracking calorie and macronutrient intake.',
+    ], 200);
+})->middleware(['throttle:api']);

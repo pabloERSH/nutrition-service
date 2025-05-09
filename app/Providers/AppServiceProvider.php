@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip())->response(
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip())->response(
                 function (Request $request, array $headers) {
                     return response()->json([
                         'message' => 'Too many requests.',
