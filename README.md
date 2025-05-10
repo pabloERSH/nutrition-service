@@ -75,6 +75,7 @@
    php artisan migrate
    ```
 6. **Запуск планировщика Laravel для автоматического удаления старых записей о приёмах пищи**:
+   
    Добавьте строку в crontab:
    ```bash
    cd /path/to/your/project && php artisan schedule:run >> /dev/null 2>&1
@@ -106,7 +107,8 @@
     ```bash
     docker-compose up -d --build
     ```
-    После этого, сам сервис и pgadmin станут доступны на портах, указанных в docker-compose.yml
+    После этого, сам сервис и pgadmin станут доступны на портах, указанных в docker-compose.yml.
+    
     Для остановки сервиса используется команда:
     ```bash
     docker-compose stop
