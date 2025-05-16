@@ -130,6 +130,10 @@
 
 - **POST /api/v1/register**
   - **Описание**: Регистрирует нового пользователя.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Параметры**:
     - `name` (строка, обязательный)
     - `email` (строка, обязательный, уникальный)
@@ -152,6 +156,10 @@
 
 - **POST /api/v1/login**
   - **Описание**: Аутентифицирует пользователя и возвращает токен Sanctum.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Параметры**:
     - `email` (строка, обязательный)
     - `password` (строка, обязательный)
@@ -178,6 +186,8 @@
   - **Описание**: Инвалидирует текущий токен пользователя.
   - **Заголовки**:
     - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -189,6 +199,7 @@
   - **Описание**: Возвращает информацию об аутентифицированном пользователе.
   - **Заголовки**:
     - `Authorization: Bearer <token>`
+    - `Accept: application/json`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -202,11 +213,12 @@
 
 - **GET /api/v1/eaten-foods**
   - **Описание**: Возвращает постраничный список приемов пищи пользователя, подсчитывает калории.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
   - **Параметры запроса**:
     - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
     - `page` (целое число, необязательный, по умолчанию: 1)
-  - **Заголовки**:
-    - `Authorization: Bearer <token>`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -233,6 +245,10 @@
 
 - **POST /api/v1/eaten-foods**
   - **Описание**: Регистрирует новый прием пищи. Можно отправить свою инофрмацию о продукте, не отправляя food_id (id сохраненного продукта), а можно взять сохранненую информацию, передав food_id и не передавая food_name, proteins, fats, carbs.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Параметры**:
     - `food_name` (строка, необязательный)
     - `food_id` (целое число, необязательный, ссылка на сохраненный продукт)
@@ -241,8 +257,6 @@
     - `carbs` (число, необязательный, обязателен при наличии `food_name`)
     - `weight` (число, обязательный)
     - `eaten_at` (строка, обязательный, формат: YYYY-MM-DD)
-  - **Заголовки**:
-    - `Authorization: Bearer <token>`
   - **Пример запроса**:
     ```bash
     curl -X POST http://localhost:8000/api/v1/eaten-foods \
@@ -278,12 +292,14 @@
 
 - **GET /api/v1/eaten-foods/show-by-date**
   - **Описание**: Возвращает приемы пищи за указанную дату с агрегированными данными о питании. Подсчитывает суммарную информацию о макронутриентах и калориях.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Параметры запроса**:
     - `date` (строка, обязательный, формат: YYYY-MM-DD)
     - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
     - `page` (целое число, необязательный, по умолчанию: 1)
-  - **Заголовки**:
-    - `Authorization: Bearer <token>`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -316,11 +332,12 @@
 
 - **GET /api/v1/saved-foods**
   - **Описание**: Возвращает постраничный список сохраненных продуктов, подсчитывает калорийность на 100 грамм.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
   - **Параметры запроса**:
     - `per_page` (целое число, необязательный, по умолчанию: 10, макс: 20)
     - `page` (целое число, необязательный, по умолчанию: 1)
-  - **Заголовки**:
-    - `Authorization: Bearer <token>`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -345,13 +362,15 @@
 
 - **POST /api/v1/saved-foods**
   - **Описание**: Сохраняет новый продукт в базе данных.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Параметры**:
     - `food_name` (строка, обязательный)
     - `proteins` (число, обязательный)
     - `fats` (число, обязательный)
     - `carbs` (число, обязательный)
-  - **Заголовки**:
-    - `Authorization: Bearer <token>`
   - **Ответ (201 Created)**:
     ```json
     {
@@ -369,6 +388,8 @@
   - **Описание**: Обновляет сохраненный продукт.
   - **Заголовки**:
     - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
   - **Ответ (200 OK)**:
     ```json
     {
@@ -388,11 +409,56 @@
   - **Описание**: Удаляет сохраненный продукт.
   - **Заголовки**:
     - `Authorization: Bearer <token>`
+    - `Accept: application/json`
   - **Ответ (200 OK)**:
     ```json
     {
       "message": "Food deleted successfully"
     }
+    ```
+    
+- **GET /api/v1/saved-foods/search**
+  - **Описание**: Поиск сохраненных продуктов по названию.
+  - **Заголовки**:
+    - `Authorization: Bearer <token>`
+    - `Accept: application/json`
+    - `Content-type: application/json`
+  - **Параметры**:
+    - `food_name` (строка, обязательный)
+  - **Ответ (200 OK)**:
+    ```json
+    {
+    "data": [
+        {
+            "id": 1,
+            "user_id": 1,
+            "food_name": "яблоко",
+            "proteins": "0.50",
+            "fats": "0.20",
+            "carbs": "14.00",
+            "created_at": "2025-05-15T19:43:29.000000Z",
+            "updated_at": "2025-05-15T19:43:29.000000Z",
+            "kcal": 59.8
+        },
+        {
+            "id": 2,
+            "user_id": 1,
+            "food_name": "яблоко green",
+            "proteins": "0.50",
+            "fats": "0.20",
+            "carbs": "22.00",
+            "created_at": "2025-05-15T19:43:55.000000Z",
+            "updated_at": "2025-05-15T19:43:55.000000Z",
+            "kcal": 91.8
+        }
+    ],
+    "meta": {
+        "current_page": 1,
+        "per_page": 5,
+        "total": 2,
+        "last_page": 1
+    }
+}
     ```
 
 ## Тестирование

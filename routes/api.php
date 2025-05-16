@@ -32,7 +32,6 @@ Route::prefix('v1')->middleware(['throttle:api', 'auth:sanctum'])->group(functio
 Route::get('/', function () {
     return response()->json([
         'message' => 'Welcome to the API',
-        'info' => 'This API allows users to search for products by name and view their nutritional
-         value and keep a food diary by recording meals and tracking calorie and macronutrient intake.',
+        'info' => 'This API allows users to search for products by name and view their nutritional value and keep a food diary by recording meals and tracking calorie and macronutrient intake.',
     ], 200);
 })->middleware(['throttle:api']);
